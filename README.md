@@ -12,7 +12,8 @@ B [Getting on to the cluster](#getting-on-to-the-cluster)
 C [Setting up the cluster](#setting-up-the-cluster)  
 D [Running simulations](#running-simulations)  
 E [Using Virtual Studio (VS) Code](#e-using-virtual-studio-vs-code)  
-F [Typical errors and options to make your life easier](#f-typical-errors-and-options-to-make-your-life-easier)
+F [Running multi-weather-year / stress-test scenarios](#f-running-multi-weather-year--stress-test-scenarios)  
+G [Typical errors and options to make your life easier](#g-typical-errors-and-options-to-make-your-life-easier)
 
 ## A. General information about PyPSA-Eur
 
@@ -318,8 +319,57 @@ Don't use the login node for any operations (in particular with VS Code, as it s
   b. through the terminal: ```pkill -u "$USER" vscode-server``` or ```killall -u "$USER" vscode-server```.
 3. Git might not be activated by default: ```module load git``` and check with ```git --version```.
 
+## F. Running multi-weather-year / stress-test scenarios
 
-## F. Typical Errors and options to make your life easier
+PyPSA-Eur supports running many weather years as separate scenarios (e.g. for stress analysis). This requires several non-default config changes and a specific cutout layout. This section assumes you've already completed the standard setup in C and D.
+
+**Reference implementation:** this workflow has been developed and tested on [aleks-g/pypsa-eur, branch `sector-droughts`](https://github.com/aleks-g/pypsa-eur/tree/sector-droughts) — it may lag behind the newest upstream PyPSA-Eur commits, but is known to work for this purpose. Fix a specific version/commit rather than tracking `main`.
+
+### 1. Config changes
+
+Start from a copy of `config.default.yaml` (e.g. following [`sector_droughts.yaml`](https://github.com/aleks-g/pypsa-eur/blob/sector-droughts/config/sector_droughts.yaml) as a template, always diffing against the current `config.default.yaml`). Key switches:
+
+| Setting | Value | Notes |
+|---|---|---|
+| `scenarios` | `true` | must point to a scenario file (see step 2) |
+| `shared_cutouts` | `false` | the only setting known to work with per-scenario cutouts |
+| `enable` | build/retrieve cutouts off, drop leap day | cutouts are supplied manually (step 3) |
+| `atlite: cutout_directory` and `default-cutout` | set per your layout | also set per-scenario |
+| `electricity: load: manual_adjustment`, `supplement_synthetic` | `true` | |
+| `clustering: mode` | `custom_busmap` | requires a busmap file — generate by running one scenario, save the resulting busmap, and move it to the path the snakefile expects |
+| `clustering: temporal: resolution_elec` / `resolution_sector` | as needed | can also be set per-scenario |
+| `mem_mb`, `runtime` | check/adjust | multi-year runs are larger than default |
+
+`snapshots` is set within the scenario file (step 2), not the top-level config.
+
+### 2. Generate the scenario file
+
+Use [`create_weather_year_scenarios.py`](https://github.com/aleks-g/pypsa-eur/blob/sector-droughts/config/create_weather_year_scenarios.py), which wraps PyPSA-Eur's `create_scenarios.py` and formats output for Sophia. It produces a file like [`weather_scenarios_cutouts.yaml`](https://github.com/aleks-g/pypsa-eur/blob/stressed-system/config/weather_scenarios_cutouts.yaml) or [`design_stress_years.yaml`](https://github.com/aleks-g/pypsa-eur/blob/sector-droughts/config/design_stress_years.yaml).
+
+### 3. Link the cutouts
+
+Weather-year cutouts live in `/groups/EXTREMES/cutouts/` (e.g. `europe-1941-1946-era5.nc`; multiple versions may exist — check before assuming). Rather than copying, symlink them per scenario. From your `pypsa-eur` directory:
+
+```bash
+for y in {1941..2023}; do
+  mkdir -p cutouts/{config_name}/weather_year_$y
+  for f in /groups/EXTREMES/cutouts/europe-*-*-era5.nc; do
+    ln -sfn "$f" cutouts/{config_name}/weather_year_$y/
+  done
+done
+```
+
+Replace `{config_name}` with your config's name; adjust the year range to what your scenario file covers.
+
+### 4. Modified scripts
+
+Some scripts need adaptation beyond config changes — notably for non-calendar-year runs (e.g. summer-to-summer rather than Jan–Dec). See the adapted scripts on the reference branch, including `build_electricity_demand.py`, `solve_network.py`, and `build_hydro_profile.py`. If you hit errors not covered here, check whether the relevant script has a modified version on that branch first.
+
+### 5. Run as usual
+
+Follow section D's prep/solve pattern, pointing `--configfile` at your scenario config.
+
+## G. Typical Errors and options to make your life easier
 
 Here are some solutions to errors that you may encounter when working with PyPSA-Eur on SOPHIA.
 
