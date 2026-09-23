@@ -6,12 +6,13 @@ Its main purpose is to help MSc and PhD students install the packages and run si
 
 If you encounter a problem (and hopefully also a solution), please, pull request changes to this README file with the solution so that other students can also benefit.
 
-The content of this document is structured as follows:<br>
-A [General information about PyPSA-Eur](#general-information-about-pypsa-eur)  <br>
-B [Getting on to the cluster](#getting-on-to-the-cluster)  <br>
-C [Setting up the cluster](#setting-up-the-cluster)  <br>
-D [Running simulations](#running-simulations)<br>
-E [Typical errors](#typical-errors-and-options-to-make-your-life-easier)<br>
+The content of this document is structured as follows:  
+A [General information about PyPSA-Eur](#general-information-about-pypsa-eur)  
+B [Getting on to the cluster](#getting-on-to-the-cluster)  
+C [Setting up the cluster](#setting-up-the-cluster)  
+D [Running simulations](#running-simulations)  
+E [Using Virtual Studio (VS) Code](#e-using-virtual-studio-vs-code)  
+F [Typical errors and options to make your life easier](#f-typical-errors-and-options-to-make-your-life-easier)
 
 ## A. General information about PyPSA-Eur
 
@@ -220,7 +221,9 @@ ssh sn402
 Then connect VS Code to that node as in the steps above.
 
 
-## F. Using Virtual Studio (VS) Code (outdated options)
+### Legacy setup (outdated)
+**New students should use the main workflow above (Singularity/tunnel, or the `salloc` alternative) instead of what follows.** This subsection is kept for reference — e.g. if you inherit a project already using Miniconda/mamba, or need the git commit/push settings below, which aren't covered elsewhere.
+
 For legacy reasons, you can find below the former setup described by Aleks and Ebbe. 
 
 Edit 20/10/2024 by Aleks: Added a set-up for VS Code and Miniconda, including common issues with the license (on the head node, logging in etc). With VS Code, you will always work with an interactive virtual node which will change some of the above steps. See below.
