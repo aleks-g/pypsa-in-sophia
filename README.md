@@ -178,6 +178,8 @@ You can also run only parts of the simulation by specifying what rule to run
 
 You can take a look at the `SNAKEFILE` where all the rules are defined. For more information about how SNAKEMAKE works take a look at the [documentation](https://snakemake.readthedocs.io/en/stable/).
 
+Edit by Aleks: I suggest using different scripts depending on the task, to distinguish preparing networks from solving them — this avoids job conflicts/kills and lets you pick partitions to guarantee resources. Use `snakemake_cluster` as usual for `prepare_sector_networks` and other non-solve rules. For solving, use `snakemake_solve_fat` or `snakemake_solve_thin` instead (new scripts in `/SOPHIA_cluster`, copy and `chmod u+x` them like `snakemake_cluster`, step C.7) — pick whichever fits your job size and current partition load (check `sinfo` or Ganglia, section B.4).
+
 
 ## E. Using Virtual Studio (VS) Code 
 
