@@ -51,6 +51,8 @@ The main way of interacting with the cluster will be through a terminal where yo
 #### 4. Useful commands
 Some useful commands to use in the cluster are described in the [Sophia documentation](https://dtu-sophia.github.io/docs/scheduler/).
 
+You can also monitor cluster/node load [here](http://10.40.84.120/ganglia/?c=OpenHPC&m=load_one&r=hour&s=by%20name&hc=4&mc=2). This can be useful when deciding which partition to target with `salloc`/`sbatch` (see the interactive-node workflow in section E).
+
 #### 5. Moving files to/from the cluster
 If you are using Windows, [WinSCP](https://winscp.net/eng/download.php) can be useful to copy folders to/from the cluster. Alternatively, use FileZilla on Windows, OSX or Linux, or directly VSCode.
 
@@ -177,7 +179,7 @@ You can also run only parts of the simulation by specifying what rule to run
 You can take a look at the `SNAKEFILE` where all the rules are defined. For more information about how SNAKEMAKE works take a look at the [documentation](https://snakemake.readthedocs.io/en/stable/).
 
 
-#### E. Using Virtual Studio (VS) Code 
+## E. Using Virtual Studio (VS) Code 
 
 VS Code must be installed on your local computer, not on the cluster.
 
@@ -200,8 +202,23 @@ sbatch --partition=workq ~/vscode-tunnel.sh
 
 3. In VSCode panel,  "Connect to host" and select "sophia-vscode"
 
+### Alternative: manual `salloc`
 
-#### F. Using Virtual Studio (VS) Code (outdated options)
+If you'd rather allocate a node by hand (e.g. to control walltime or exclusivity directly), the following also works. Run it inside a tmux session (see golden rules in section B) since `salloc` connections are more prone to dropping. Check `sinfo` or the Ganglia link (section B.4) first to see which partitions are idle:
+
+```
+tmux new -t tunnel
+sinfo                                                      # check which partitions have idle nodes
+salloc -n 1 -N 1 --time=600 --exclusive=user -p workq, windq      # allocates ~7.5h; adjust --time and -p as needed
+# once allocated, note the node name it gives you, e.g. sn402
+ssh sn402
+./code tunnel                                              # or your usual tunnel/ssh method into the node
+```
+
+Then connect VS Code to that node as in the steps above.
+
+
+## F. Using Virtual Studio (VS) Code (outdated options)
 For legacy reasons, you can find below the former setup described by Aleks and Ebbe. 
 
 Edit 20/10/2024 by Aleks: Added a set-up for VS Code and Miniconda, including common issues with the license (on the head node, logging in etc). With VS Code, you will always work with an interactive virtual node which will change some of the above steps. See below.
