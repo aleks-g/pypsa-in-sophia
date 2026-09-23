@@ -30,6 +30,12 @@ This [video](https://www.youtube.com/watch?v=ty47YU1_eeQ) provides a nice introd
 
 ## B. Getting on to the cluster
 
+> **Golden rules — read this before anything else:**
+>
+> 1. **Never run anything on the login node** beyond submitting jobs or trivial disk operations (`ls`, `sinfo`, `squeue`). Submitting a snakemake job from the login node is fine as long as the job itself doesn't execute there. Check which node you're on with `echo $HOSTNAME` — if it doesn't start with `sn*`, you are on the login node.
+> 2. **Use tmux** for anything long-running or interactive: submitting snakemake jobs, holding an interactive-node allocation, tunnelling VS Code. tmux keeps your session alive if your connection drops. [Check the cheatsheet](https://tmuxcheatsheet.com/)
+> 3. **Don't use `$HOME` for large or non-permanent files.** Use `/work/users/<username>` instead (see step C.2 below). It's convenient to `export WORK=/work/users/<username>` in your `~/.bashrc`.
+
 #### 1. Get access to SOPHIA
 To use the [SOPHIA cluster](https://dtu-sophia.github.io/docs/), first you need to get a user. You need to ask your supervisor to send [an email](https://dtu-sophia.github.io/docs/account/) requesting access for you.
 
@@ -57,10 +63,10 @@ If you are using Windows, [WinSCP](https://winscp.net/eng/download.php) can be u
 #### 1. Installing pixi
 Install [pixi](https://pixi.prefix.dev/latest/) to manage your python packages.
 
-Alternative package managers such us [mamba](https://mamba.readthedocs.io/en/latest/) or [anaconda/miniconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) can also be used.
+Alternative package managers such us [mamba](https://mamba.readthedocs.io/en/latest/) or [anaconda/miniconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) can also be used. See the legacy VS Code + Miniconda setup in section E; use pixi if starting fresh.
 
 #### 2 Installing PyPSA-Eur
-Start by making a folder where you want to install PyPSA-Eur and all that is needed to run it. I would make it in the home directory and call it `projects`
+Start by making a folder where you want to install PyPSA-Eur and all that is needed to run it. Use your `$WORK` directory (`/work/users/<username>`, see the golden rules in section B), not `$HOME` — PyPSA-Eur outputs and cutouts (which we have saved in `groups/EXTREMES/`) get large. Call it `projects`:
 
 > mkdir projects
 
@@ -80,7 +86,9 @@ Every time you log in to the cluster you must activate the environment again. Th
 > (pypsa-eur) [user@sophia1 ~]$
 
 #### 4. Install gurobi 
-Install the optimization software [Gurobi](https://www.gurobi.com) in the environment by running the command
+If using pixi rather than conda, install gurobi through pixi's package management instead.
+
+Otherwise, install the optimization software [Gurobi](https://www.gurobi.com) in the environment by running the command
 > conda install -c gurobi gurobi
 
 ### 5. Setting up the gurobi license
@@ -88,6 +96,14 @@ Install the optimization software [Gurobi](https://www.gurobi.com) in the enviro
 The license is managed through a [token server](https://support.gurobi.com/hc/en-us/articles/13264425253265-How-do-I-create-a-token-server-client-license) on the head node. You need to create a file 'gurobi.lic' save it in your home directory in the cluster and write the following text in that file. 
 
 > TOKENSERVER=sophia1.hpc.ait.dtu.dk
+
+You also need to point Gurobi at this file. Add the following line to your `~/.bashrc` and re-source it (`source ~/.bashrc`):
+
+```
+GRB_LICENSE_FILE=~/gurobi.lic
+```
+
+Note: the token server runs on the head/login node, but you will be working from interactive/compute nodes — `TOKENSERVER=localhost` will not work there; use `sophia1.hpc.ait.dtu.dk` as above.
 
 #### 7. Configure SNAKEMAKE 
 
